@@ -1,9 +1,10 @@
-import { db } from "@/db";
-import { products } from "@/db/schema";
+import { db } from "@/lib/db";
+import { products } from "@/lib/db/schema";
 import Navbar from "@/components/Navbar";
 import Card from "@/components/Card";
 import Footer from "@/components/Footer";
-
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 // Force dynamic rendering to avoid static build errors without DATABASE_URL
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,10 @@ async function getProducts() {
 
 export default async function Home() {
   const allProducts = await getProducts();
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
   return (
     <div className="flex min-h-screen flex-col bg-light-100">

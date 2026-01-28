@@ -1,26 +1,52 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface AuthFormProps {
   mode: "sign-in" | "sign-up";
-  onSubmit?: (data: FormData) => void;
+  onSubmit?: (data: FormData) => Promise<{ success?: boolean; error?: string }>;
 }
 
 export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const isSignUp = mode === "sign-up";
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
+
     if (onSubmit) {
-      const formData = new FormData(e.currentTarget);
-      onSubmit(formData);
+      setIsLoading(true);
+      try {
+        const formData = new FormData(e.currentTarget);
+        const result = await onSubmit(formData);
+
+        if (result.error) {
+          setError(result.error);
+        } else if (result.success) {
+          router.refresh();
+          router.push("/");
+        }
+      } catch {
+        setError("An unexpected error occurred");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {/* Error Message */}
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-body text-red-700">
+          {error}
+        </div>
+      )}
       {/* Full Name (Sign Up only) */}
       {isSignUp && (
         <div className="flex flex-col gap-2">
@@ -127,9 +153,10 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
       {/* Submit Button */}
       <button
         type="submit"
-        className="mt-2 w-full rounded-full bg-dark-900 px-6 py-3.5 text-body font-body-medium text-light-100 transition-colors hover:bg-dark-700"
+        disabled={isLoading}
+        className="mt-2 w-full rounded-full bg-dark-900 px-6 py-3.5 text-body font-body-medium text-light-100 transition-colors hover:bg-dark-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isSignUp ? "Sign Up" : "Sign In"}
+        {isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
       </button>
 
       {/* Terms */}
