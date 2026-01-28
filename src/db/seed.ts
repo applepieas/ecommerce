@@ -1,9 +1,10 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { products } from "./schema";
+import { config } from "dotenv";
 
-// Load environment variables
-import "dotenv/config";
+// Load environment variables from .env.local
+config({ path: ".env.local" });
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
