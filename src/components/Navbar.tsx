@@ -11,10 +11,10 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: "Men", href: "#" },
-    { label: "Women", href: "#" },
-    { label: "Kids", href: "#" },
-    { label: "Collections", href: "#" },
+    { label: "Men", href: "/products?gender=men" },
+    { label: "Women", href: "/products?gender=women" },
+    { label: "Kids", href: "/products" },
+    { label: "Collections", href: "/products" },
     { label: "Contact", href: "#" },
   ];
 
