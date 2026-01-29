@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { products } from "@/lib/db/schema";
+import { products, productVariants, productImages, categories } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import Navbar from "@/components/Navbar";
 import Card from "@/components/Card";
 import Footer from "@/components/Footer";
@@ -10,7 +11,32 @@ export const dynamic = "force-dynamic";
 
 async function getProducts() {
   try {
-    return await db.select().from(products);
+    // Fetch products with their first variant and category
+    const allProducts = await db.select().from(products).where(eq(products.isPublished, true));
+
+    // Get variants and images for each product
+    const productsWithDetails = await Promise.all(
+      allProducts.map(async (product) => {
+        const variants = await db.select().from(productVariants).where(eq(productVariants.productId, product.id));
+        const images = await db.select().from(productImages).where(eq(productImages.productId, product.id));
+        const category = product.categoryId
+          ? await db.select().from(categories).where(eq(categories.id, product.categoryId)).then(r => r[0])
+          : null;
+
+        const firstVariant = variants[0];
+        const primaryImage = images.find(img => img.isPrimary) || images[0];
+
+        return {
+          ...product,
+          price: firstVariant?.price || "0",
+          imageUrl: primaryImage?.url || "/shoes/shoe-1.jpg",
+          categoryName: category?.name || "Shoes",
+          colorCount: new Set(variants.map(v => v.colorId)).size || 1,
+        };
+      })
+    );
+
+    return productsWithDetails;
   } catch (error) {
     console.error("Failed to fetch products:", error);
     return [];
@@ -64,7 +90,7 @@ export default async function Home() {
             <p className="max-w-sm text-center text-body font-body text-dark-700">
               Run the seed script to add Nike products:
               <code className="mt-2 block rounded bg-light-200 px-3 py-2 font-mono text-caption">
-                npx tsx src/db/seed.ts
+                npm run db:seed
               </code>
             </p>
           </div>
@@ -74,10 +100,10 @@ export default async function Home() {
               <Card
                 key={product.id}
                 title={product.name}
-                category={product.category || "Shoes"}
+                category={product.categoryName}
                 price={parseFloat(product.price)}
-                imageUrl={product.imageUrl || "/shoes/shoe-1.jpg"}
-                colorCount={Math.floor(Math.random() * 8) + 1}
+                imageUrl={product.imageUrl}
+                colorCount={product.colorCount}
                 badge={index === 0 ? "Best Seller" : undefined}
               />
             ))}
@@ -90,3 +116,4 @@ export default async function Home() {
     </div>
   );
 }
+

@@ -1,21 +1,49 @@
-import {
-  pgTable,
-  serial,
-  varchar,
-  text,
-  decimal,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, boolean, timestamp } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { categories } from "./categories";
+import { genders } from "./filters/genders";
+import { brands } from "./brands";
 
 export const products = pgTable("products", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
   description: text("description"),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  imageUrl: varchar("image_url", { length: 500 }),
-  category: varchar("category", { length: 100 }),
-  createdAt: timestamp("created_at").defaultNow(),
+  categoryId: uuid("category_id").references(() => categories.id, {
+    onDelete: "set null",
+  }),
+  genderId: uuid("gender_id").references(() => genders.id, {
+    onDelete: "set null",
+  }),
+  brandId: uuid("brand_id").references(() => brands.id, {
+    onDelete: "set null",
+  }),
+  isPublished: boolean("is_published").notNull().default(false),
+  defaultVariantId: uuid("default_variant_id"), // FK added after variants creation to avoid circular deps
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Relations
+export const productsRelations = relations(products, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id],
+  }),
+  gender: one(genders, {
+    fields: [products.genderId],
+    references: [genders.id],
+  }),
+  brand: one(brands, {
+    fields: [products.brandId],
+    references: [brands.id],
+  }),
+}));
+
+// Zod schemas
+export const insertProductSchema = createInsertSchema(products);
+export const selectProductSchema = createSelectSchema(products);
+
+// Type exports
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;

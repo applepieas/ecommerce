@@ -8,6 +8,13 @@
       "when": 1769626597674,
       "tag": "0000_hard_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769675502721,
+      "tag": "0001_magenta_annihilus",
+      "breakpoints": true
     }
   ]
 }

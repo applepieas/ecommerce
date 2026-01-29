@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Product } from "@/db/schema";
+import type { Product } from "@/lib/db/schema";
 
 interface ProductsState {
   products: Product[];
