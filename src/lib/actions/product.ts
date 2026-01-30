@@ -532,3 +532,84 @@ export async function getProduct(productId: string): Promise<ProductDetailData |
   }
 }
 
+/**
+ * Get related products (for "You Might Also Like" section)
+ */
+export async function getRelatedProducts(
+  productId: string,
+  categoryId: string | null,
+  genderId: string | null,
+  limit: number = 4
+): Promise<ProductCardData[]> {
+  try {
+    // 1. Build scoring expression for relevance
+    // Score 3: Same Category AND Same Gender
+    // Score 2: Same Category
+    // Score 1: Same Gender
+    const relevanceScore = sql<number>`(
+      (CASE WHEN ${products.categoryId} = ${categoryId} THEN 2 ELSE 0 END) +
+      (CASE WHEN ${products.genderId} = ${genderId} THEN 1 ELSE 0 END)
+    )`;
+
+    // 2. Fetch products with relevance > 0
+    const relatedQuery = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        categoryName: categories.name,
+        brandName: brands.name,
+        minEffectivePrice: sql<string>`MIN(CAST(COALESCE(${productVariants.salePrice}, ${productVariants.price}) AS DECIMAL))`,
+        hasSalePrice: sql<boolean>`MAX(CASE WHEN ${productVariants.salePrice} IS NOT NULL THEN 1 ELSE 0 END) = 1`,
+        minSalePrice: sql<string>`MIN(CAST(${productVariants.salePrice} AS DECIMAL))`,
+        colorCount: sql<number>`COUNT(DISTINCT ${productVariants.colorId})`,
+        score: relevanceScore,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .leftJoin(brands, eq(products.brandId, brands.id))
+      .leftJoin(productVariants, eq(products.id, productVariants.productId))
+      .where(
+        and(
+          eq(products.isPublished, true),
+          sql`${products.id} != ${productId}`,
+          or(
+            categoryId ? eq(products.categoryId, categoryId) : undefined,
+            genderId ? eq(products.genderId, genderId) : undefined
+          )
+        )
+      )
+      .groupBy(products.id, products.name, categories.name, brands.name, relevanceScore)
+      .orderBy(desc(relevanceScore))
+      .limit(limit);
+
+    // 3. Fetch images for these products
+    const relatedWithImages: ProductCardData[] = await Promise.all(
+      relatedQuery.map(async (product) => {
+        const image = await db
+          .select({ url: productImages.url })
+          .from(productImages)
+          .where(eq(productImages.productId, product.id))
+          .orderBy(desc(productImages.isPrimary), asc(productImages.sortOrder))
+          .limit(1);
+
+        return {
+          id: product.id,
+          name: product.name,
+          categoryName: product.categoryName || "Shoes",
+          brandName: product.brandName,
+          price: parseFloat(product.minEffectivePrice),
+          salePrice: product.hasSalePrice && product.minSalePrice
+            ? parseFloat(product.minSalePrice)
+            : null,
+          imageUrl: image[0]?.url || "/shoes/shoe-1.jpg",
+          colorCount: product.colorCount || 1,
+        };
+      })
+    );
+
+    return relatedWithImages;
+  } catch (error) {
+    console.error(`Failed to fetch related products:`, error);
+    return [];
+  }
+}

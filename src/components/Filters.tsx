@@ -25,6 +25,7 @@ interface FiltersProps {
   genders: { slug: string; label: string }[];
   sizes: { slug: string; name: string }[];
   colors: { slug: string; name: string; hexCode: string }[];
+  categories: { slug: string; name: string }[];
   /** Render mode: 'sidebar' for desktop, 'mobile' for mobile button + drawer */
   mode?: "sidebar" | "mobile";
 }
@@ -39,6 +40,11 @@ function buildFilterGroups(props: FiltersProps): FilterGroup[] {
       key: "gender",
       label: "Gender",
       options: props.genders.map((g) => ({ value: g.slug, label: g.label })),
+    },
+    {
+      key: "category",
+      label: "Category",
+      options: props.categories.map((c) => ({ value: c.slug, label: c.name })),
     },
     {
       key: "size",
@@ -293,6 +299,7 @@ export default function Filters({
   genders,
   sizes,
   colors,
+  categories,
   mode = "sidebar",
 }: FiltersProps) {
   const router = useRouter();
@@ -346,8 +353,8 @@ export default function Filters({
 
   // Build filter groups from props
   const filterGroups = useMemo(
-    () => buildFilterGroups({ genders, sizes, colors }),
-    [genders, sizes, colors]
+    () => buildFilterGroups({ genders, sizes, colors, categories }),
+    [genders, sizes, colors, categories]
   );
 
   // Handle filter toggle - only update local state

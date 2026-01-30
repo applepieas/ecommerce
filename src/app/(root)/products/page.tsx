@@ -12,7 +12,7 @@ import {
 } from "@/lib/utils/query";
 import { getAllProducts } from "@/lib/actions/product";
 import { db } from "@/lib/db";
-import { genders, colors, sizes } from "@/lib/db/schema";
+import { genders, colors, sizes, categories } from "@/lib/db/schema";
 import { asc } from "drizzle-orm";
 
 // Force dynamic rendering
@@ -23,10 +23,11 @@ export const dynamic = "force-dynamic";
 // ============================================
 
 async function getFilterOptions() {
-  const [allGenders, allSizes, allColors] = await Promise.all([
+  const [allGenders, allSizes, allColors, allCategories] = await Promise.all([
     db.select().from(genders),
     db.select().from(sizes).orderBy(asc(sizes.sortOrder)),
     db.select().from(colors),
+    db.select().from(categories),
   ]);
 
   return {
@@ -37,6 +38,7 @@ async function getFilterOptions() {
       name: c.name,
       hexCode: c.hexCode,
     })),
+    categories: allCategories.map((c) => ({ slug: c.slug, name: c.name })),
   };
 }
 
@@ -73,6 +75,14 @@ function ActiveFilters({ filters, filterOptions }: ActiveFiltersProps) {
     const color = filterOptions.colors.find((opt) => opt.slug === c);
     if (color) {
       badges.push({ key: "color", value: c, label: color.name });
+    }
+  });
+
+  // Category badges
+  filters.category.forEach((c) => {
+    const category = filterOptions.categories.find((opt) => opt.slug === c);
+    if (category) {
+      badges.push({ key: "category", value: c, label: category.name });
     }
   });
 
@@ -197,6 +207,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   genders={filterOptions.genders}
                   sizes={filterOptions.sizes}
                   colors={filterOptions.colors}
+                  categories={filterOptions.categories}
                   mode="mobile"
                 />
               </Suspense>
@@ -220,6 +231,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 genders={filterOptions.genders}
                 sizes={filterOptions.sizes}
                 colors={filterOptions.colors}
+                categories={filterOptions.categories}
                 mode="sidebar"
               />
             </Suspense>
