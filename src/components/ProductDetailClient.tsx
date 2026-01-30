@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useCart } from "./cart/CartContext";
 import ProductGallery from "./ProductGallery";
 import ColorPicker from "./ColorPicker";
 import SizePicker from "./SizePicker";
@@ -143,6 +144,43 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const isInStock = selectedVariant ? selectedVariant.inStock > 0 : true;
   const canAddToCart = selectedSizeId && selectedColorId && isInStock;
 
+  // Cart Context
+  const { addItem, isDrawerOpen } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddToCart = async () => {
+    if (!canAddToCart || !selectedVariant || !selectedColor) return;
+
+    setIsAdding(true);
+    try {
+      // Find image for this variant/color or fallback to first
+      const image = product.images.find(
+        (img) => img.variantId === selectedVariant.id
+      ) ||
+        product.images.find(
+          (img) => variantColorMap.get(selectedVariant.id) === img.variantId
+        ) ||
+        product.images[0];
+
+      await addItem(
+        product.id,
+        selectedVariant.id,
+        1,
+        {
+          price: displayPrice.price,
+          salePrice: displayPrice.salePrice,
+          productName: product.name,
+          variantName: `${selectedColor.name} / ${selectedVariant.size?.name || "Size"}`,
+          imageUrl: image?.url || "/placeholder.jpg",
+        }
+      );
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   return (
     <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
       {/* Left Column - Gallery */}
@@ -210,16 +248,23 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
         {/* Add to Bag Button */}
         <button
-          disabled={!canAddToCart}
+          onClick={handleAddToCart}
+          disabled={!canAddToCart || isAdding}
           className={`
             mt-2 flex h-14 w-full items-center justify-center rounded-full text-body font-body-medium transition-all
-            ${canAddToCart
+            ${canAddToCart && !isAdding
               ? "bg-dark-900 text-light-100 hover:bg-dark-700 active:scale-[0.98]"
               : "cursor-not-allowed bg-light-300 text-dark-500"
             }
           `}
         >
-          {!selectedSizeId ? "Select a Size" : !isInStock ? "Out of Stock" : "Add to Bag"}
+          {isAdding
+            ? "Adding..."
+            : !selectedSizeId
+              ? "Select a Size"
+              : !isInStock
+                ? "Out of Stock"
+                : "Add to Bag"}
         </button>
 
         {/* Favorite Button */}

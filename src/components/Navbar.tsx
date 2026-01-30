@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import CartIconButton from "./cart/CartIconButton";
 
 interface NavbarProps {
   cartCount?: number;
@@ -59,24 +60,13 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
           </button>
 
           {/* Cart */}
-          <a
-            href="#"
-            className="text-body font-body text-dark-900 transition-colors hover:text-dark-700"
-          >
-            My Cart ({cartCount})
-          </a>
+          <CartIconButton />
         </div>
 
         {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-4 md:hidden">
           {/* Mobile Cart */}
-          <a
-            href="#"
-            className="text-caption font-caption text-dark-900"
-            aria-label={`Cart with ${cartCount} items`}
-          >
-            ({cartCount})
-          </a>
+          <CartIconButton />
 
           {/* Hamburger Button */}
           <button
