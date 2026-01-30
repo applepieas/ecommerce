@@ -18,7 +18,7 @@ export default function Card({
   badge,
 }: CardProps) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-lg bg-light-100 border border-light-300">
+    <article className="group flex flex-col h-full overflow-hidden rounded-lg bg-light-100 border border-light-300">
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-light-200">
         {/* Badge */}

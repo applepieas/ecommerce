@@ -76,6 +76,7 @@ export default function Sort() {
         aria-haspopup="listbox"
       >
         <span>Sort By</span>
+        <span className="text-body-medium font-body-medium bg-light-200 px-2 py-1 border border-light-300 rounded text-dark-700">{currentLabel}</span>
         <svg
           className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""
             }`}
@@ -95,8 +96,8 @@ export default function Sort() {
       {/* Dropdown Menu */}
       <div
         className={`absolute right-0 top-full z-30 mt-2 w-48 origin-top-right rounded-lg border border-light-300 bg-light-100 shadow-lg transition-all duration-200 ${isOpen
-            ? "scale-100 opacity-100"
-            : "pointer-events-none scale-95 opacity-0"
+          ? "scale-100 opacity-100"
+          : "pointer-events-none scale-95 opacity-0"
           }`}
         role="listbox"
         aria-label="Sort options"
@@ -108,8 +109,8 @@ export default function Sort() {
                 type="button"
                 onClick={() => handleSortChange(option.value)}
                 className={`flex w-full items-center justify-between px-4 py-2 text-left text-body font-body transition-colors hover:bg-light-200 focus:outline-none focus-visible:bg-light-200 ${currentSort === option.value
-                    ? "text-dark-900"
-                    : "text-dark-700"
+                  ? "text-dark-900"
+                  : "text-dark-700"
                   }`}
                 role="option"
                 aria-selected={currentSort === option.value}

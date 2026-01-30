@@ -369,15 +369,18 @@ export default function Filters({
     });
   }, []);
 
-  // Handle clear all
   const handleClearAll = useCallback(() => {
     setLocalFilters((prev) => ({
+      search: undefined,
       gender: [],
       size: [],
       color: [],
+      brand: [],
+      category: [],
       priceRange: [],
       sort: prev.sort,
       page: 1,
+      limit: prev.limit,
     }));
     setIsDrawerOpen(false);
   }, []);

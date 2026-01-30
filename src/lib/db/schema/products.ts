@@ -38,6 +38,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     fields: [products.brandId],
     references: [brands.id],
   }),
+  // Note: variants and images relations are defined in their respective schema files
 }));
 
 // Zod schemas

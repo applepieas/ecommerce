@@ -5,23 +5,33 @@ import queryString from "query-string";
 // ============================================
 
 export interface ProductFilters {
+  search?: string;
   gender: string[];
   size: string[];
   color: string[];
+  brand: string[];
+  category: string[];
   priceRange: string[];
   sort: string;
   page: number;
+  limit: number;
 }
 
-export type FilterKey = keyof Omit<ProductFilters, "sort" | "page">;
+export type FilterKey = keyof Omit<ProductFilters, "search" | "sort" | "page" | "limit">;
+
+export const ITEMS_PER_PAGE = 24;
 
 export const DEFAULT_FILTERS: ProductFilters = {
+  search: undefined,
   gender: [],
   size: [],
   color: [],
+  brand: [],
+  category: [],
   priceRange: [],
   sort: "featured",
   page: 1,
+  limit: ITEMS_PER_PAGE,
 };
 
 export const SORT_OPTIONS = [
@@ -43,7 +53,46 @@ export const PRICE_RANGES = [
 // ============================================
 
 /**
+ * Parse Next.js searchParams object into ProductFilters
+ * This is the recommended approach for Next.js 15+ server components
+ */
+export function parseFilterParams(
+  searchParams: { [key: string]: string | string[] | undefined }
+): ProductFilters {
+  const toArray = (value: string | string[] | undefined): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return [...new Set(value.filter((v): v is string => Boolean(v)))];
+    }
+    // Handle comma-separated values
+    if (typeof value === "string" && value.includes(",")) {
+      return [...new Set(value.split(",").filter(Boolean))];
+    }
+    return [value];
+  };
+
+  const search = typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const sort = typeof searchParams.sort === "string" ? searchParams.sort : "featured";
+  const page = typeof searchParams.page === "string" ? parseInt(searchParams.page, 10) || 1 : 1;
+  const limit = typeof searchParams.limit === "string" ? parseInt(searchParams.limit, 10) || ITEMS_PER_PAGE : ITEMS_PER_PAGE;
+
+  return {
+    search,
+    gender: toArray(searchParams.gender),
+    size: toArray(searchParams.size),
+    color: toArray(searchParams.color),
+    brand: toArray(searchParams.brand),
+    category: toArray(searchParams.category),
+    priceRange: toArray(searchParams.priceRange),
+    sort,
+    page,
+    limit,
+  };
+}
+
+/**
  * Parse URL search string into ProductFilters object
+ * Legacy function - kept for backwards compatibility
  */
 export function parseQueryFilters(search: string): ProductFilters {
   const parsed = queryString.parse(search, { arrayFormat: "comma" });
@@ -64,12 +113,16 @@ export function parseQueryFilters(search: string): ProductFilters {
   };
 
   return {
+    search: typeof parsed.search === "string" ? parsed.search : undefined,
     gender: toArray(parsed.gender),
     size: toArray(parsed.size),
     color: toArray(parsed.color),
+    brand: toArray(parsed.brand),
+    category: toArray(parsed.category),
     priceRange: toArray(parsed.priceRange),
     sort: typeof parsed.sort === "string" ? parsed.sort : "featured",
     page: typeof parsed.page === "string" ? parseInt(parsed.page, 10) || 1 : 1,
+    limit: typeof parsed.limit === "string" ? parseInt(parsed.limit, 10) || ITEMS_PER_PAGE : ITEMS_PER_PAGE,
   };
 }
 
@@ -79,10 +132,15 @@ export function parseQueryFilters(search: string): ProductFilters {
 export function stringifyFilters(filters: Partial<ProductFilters>): string {
   const params: Record<string, string | string[]> = {};
 
+  // Only include search if present
+  if (filters.search) params.search = filters.search;
+
   // Only include non-empty arrays
   if (filters.gender?.length) params.gender = filters.gender;
   if (filters.size?.length) params.size = filters.size;
   if (filters.color?.length) params.color = filters.color;
+  if (filters.brand?.length) params.brand = filters.brand;
+  if (filters.category?.length) params.category = filters.category;
   if (filters.priceRange?.length) params.priceRange = filters.priceRange;
 
   // Only include sort if not default
@@ -93,6 +151,11 @@ export function stringifyFilters(filters: Partial<ProductFilters>): string {
   // Only include page if not 1
   if (filters.page && filters.page > 1) {
     params.page = String(filters.page);
+  }
+
+  // Only include limit if not default
+  if (filters.limit && filters.limit !== ITEMS_PER_PAGE) {
+    params.limit = String(filters.limit);
   }
 
   return queryString.stringify(params, { arrayFormat: "comma" });
@@ -189,7 +252,10 @@ export function getActiveFilterCount(filters: ProductFilters): number {
     filters.gender.length +
     filters.size.length +
     filters.color.length +
-    filters.priceRange.length
+    filters.brand.length +
+    filters.category.length +
+    filters.priceRange.length +
+    (filters.search ? 1 : 0)
   );
 }
 
