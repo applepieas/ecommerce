@@ -3,6 +3,7 @@
 import { useCart } from "./CartContext";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect } from "react";
 
 export default function CartDrawer() {
@@ -151,12 +152,13 @@ export default function CartDrawer() {
             <p className="mb-6 text-caption font-caption text-dark-500">
               Shipping and taxes calculated at checkout.
             </p>
-            <button
-              disabled
-              className="flex w-full cursor-not-allowed items-center justify-center rounded-full bg-light-300 py-4 text-body font-body-medium text-dark-500"
+            <Link
+              href="/cart"
+              onClick={closeDrawer}
+              className="flex w-full items-center justify-center rounded-full bg-dark-900 py-4 text-body font-body-medium text-white transition-colors hover:bg-dark-700"
             >
-              Checkout (Coming Soon)
-            </button>
+              Checkout
+            </Link>
           </div>
         )}
       </div>
