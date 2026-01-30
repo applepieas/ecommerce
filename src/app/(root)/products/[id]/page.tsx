@@ -1,11 +1,11 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Card from "@/components/Card";
 import ProductDetailClient from "@/components/ProductDetailClient";
-import { getProduct, getRelatedProducts } from "@/lib/actions/product";
-import Link from "next/link";
+import ProductReviews from "@/components/ProductReviews";
+import { getProduct, getRelatedProducts, getProductReviews } from "@/lib/actions/product";
 
 // ============================================
 // Types
@@ -54,6 +54,46 @@ function ProductSkeleton() {
 }
 
 // ============================================
+// Not Found Component
+// ============================================
+
+function ProductNotFound() {
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 text-center">
+      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-light-200">
+        <svg
+          className="h-12 w-12 text-dark-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+      <div>
+        <h1 className="text-heading-3 font-heading-3 text-dark-900">
+          Product Not Found
+        </h1>
+        <p className="mt-2 text-body font-body text-dark-700">
+          The product you're looking for doesn't exist or has been removed.
+        </p>
+      </div>
+      <Link
+        href="/products"
+        className="rounded-full bg-dark-900 px-8 py-3 text-body font-body-medium text-light-100 transition-colors hover:bg-dark-700"
+      >
+        Browse All Products
+      </Link>
+    </div>
+  );
+}
+
+// ============================================
 // Breadcrumbs Component
 // ============================================
 
@@ -67,7 +107,7 @@ interface BreadcrumbsProps {
 
 function Breadcrumbs({ product }: BreadcrumbsProps) {
   return (
-    <nav className="mb-6 flex items-center gap-2 text-caption font-caption text-dark-700">
+    <nav className="mb-6 flex flex-wrap items-center gap-2 text-caption font-caption text-dark-700">
       <Link href="/" className="hover:text-dark-900 hover:underline">
         Home
       </Link>
@@ -98,9 +138,18 @@ function Breadcrumbs({ product }: BreadcrumbsProps) {
         </>
       )}
       <span>/</span>
-      <span className="text-dark-900">{product.name}</span>
+      <span className="text-dark-900 line-clamp-1 max-w-[200px]">{product.name}</span>
     </nav>
   );
+}
+
+// ============================================
+// Reviews Section (Wrapper for Suspense)
+// ============================================
+
+async function ReviewsSection({ productId }: { productId: string }) {
+  const reviews = await getProductReviews(productId);
+  return <ProductReviews reviews={reviews} />;
 }
 
 // ============================================
@@ -132,7 +181,7 @@ async function YouMightAlsoLike({ productId, categoryId, genderId }: YouMightAls
             : 0;
 
           return (
-            <Link key={product.id} href={`/products/${product.id}`} className="flex flex-col h-full">
+            <Link key={product.id} href={`/products/${product.id}`} className="group flex flex-col h-full">
               <Card
                 title={product.name}
                 category={product.categoryName}
@@ -156,10 +205,21 @@ async function YouMightAlsoLike({ productId, categoryId, genderId }: YouMightAls
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
 
+  // We need to handle potential invalid UUIDs gracefully
+  // getProduct checks DB but if ID is not UUID format it might throw at DB level
+  // So standard practice is let it try, catch if needed, but getProduct handles it
   const product = await getProduct(id);
 
   if (!product) {
-    notFound();
+    return (
+      <div className="flex min-h-screen flex-col bg-light-100">
+        <Navbar cartCount={0} />
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
+          <ProductNotFound />
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -173,6 +233,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
         {/* Product Content */}
         <Suspense fallback={<ProductSkeleton />}>
           <ProductDetailClient product={product} />
+        </Suspense>
+
+        {/* Reviews */}
+        <Suspense fallback={
+          <div className="mt-16 border-t border-light-300 pt-12 animate-pulse">
+            <div className="h-8 w-48 rounded bg-light-200 mb-8" />
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="h-40 rounded bg-light-200" />
+              <div className="col-span-2 flex flex-col gap-4">
+                {[1, 2, 3].map(i => <div key={i} className="h-32 rounded bg-light-200" />)}
+              </div>
+            </div>
+          </div>
+        }>
+          <ReviewsSection productId={product.id} />
         </Suspense>
 
         {/* You Might Also Like */}

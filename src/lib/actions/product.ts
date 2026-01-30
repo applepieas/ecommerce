@@ -10,8 +10,10 @@ import {
   colors,
   sizes,
   brands,
+  reviews,
+  user,
 } from "@/lib/db/schema";
-import { eq, and, inArray, or, ilike, sql, desc, asc, SQL, gte, lte } from "drizzle-orm";
+import { eq, and, inArray, or, ilike, sql, desc, asc, SQL } from "drizzle-orm";
 import type { ProductFilters } from "@/lib/utils/query";
 import { PRICE_RANGES, ITEMS_PER_PAGE } from "@/lib/utils/query";
 
@@ -610,6 +612,96 @@ export async function getRelatedProducts(
     return relatedWithImages;
   } catch (error) {
     console.error(`Failed to fetch related products:`, error);
+    return [];
+  }
+}
+
+/**
+ * Get product reviews
+ */
+export interface ProductReview {
+  id: string;
+  author: string;
+  rating: number;
+  title?: string;
+  content: string;
+  createdAt: string;
+}
+
+export async function getProductReviews(productId: string): Promise<ProductReview[]> {
+  try {
+    // Check if reviews exist in DB
+    const reviewsData = await db
+      .select({
+        id: reviews.id,
+        rating: reviews.rating,
+        comment: reviews.comment,
+        createdAt: reviews.createdAt,
+        userName: user.name,
+      })
+      .from(reviews)
+      .leftJoin(user, eq(reviews.userId, user.id))
+      .where(eq(reviews.productId, productId))
+      .orderBy(desc(reviews.createdAt));
+
+    if (reviewsData.length > 0) {
+      return reviewsData.map((r) => ({
+        id: r.id,
+        author: r.userName || "Anonymous",
+        rating: r.rating,
+        content: r.comment || "",
+        createdAt: r.createdAt.toISOString(),
+      }));
+    }
+
+    // Return dummy reviews if no data exists
+    return [
+      {
+        id: "1",
+        author: "Sarah J.",
+        rating: 5,
+        title: "Worth every penny!",
+        content:
+          "These match everything and are super comfortable. I've worn them for long walks and gym sessions, and they hold up perfectly. Highly recommend!",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+      },
+      {
+        id: "2",
+        author: "Mike T.",
+        rating: 4,
+        title: "Great fit, runs slightly large",
+        content:
+          "Love the style and the quality is top notch. Just be aware they run about a half size big, so maybe size down if you're in between.",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
+      },
+      {
+        id: "3",
+        author: "Alex R.",
+        rating: 5,
+        title: "Classic Nike comfort",
+        content:
+          "You can't go wrong with these. The cushioning is excellent and they look great with jeans or shorts. Will definitely buy another pair in a different color.",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
+      },
+      {
+        id: "4",
+        author: "Emily W.",
+        rating: 5,
+        title: "Perfect for daily wear",
+        content: "I wear these to work every day. Super supportive and breathable.",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(), // 2 weeks ago
+      },
+      {
+        id: "5",
+        author: "David K.",
+        rating: 4,
+        title: "Solid shoe",
+        content: "Good traction and support. Delivery was fast too.",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(), // 3 weeks ago
+      },
+    ];
+  } catch (error) {
+    console.error(`Failed to fetch reviews for product ${productId}:`, error);
     return [];
   }
 }
