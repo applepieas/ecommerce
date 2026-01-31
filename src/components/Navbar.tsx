@@ -1,14 +1,22 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import CartIconButton from "./cart/CartIconButton";
+import ProfileDropdown from "./layout/ProfileDropdown";
+import Image from "next/image";
 
 interface NavbarProps {
   cartCount?: number;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    image?: string | null;
+  } | null;
 }
 
-export default function Navbar({ cartCount = 0 }: NavbarProps) {
+export default function Navbar({ cartCount = 0, user }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
@@ -23,7 +31,7 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
     <header className="sticky top-0 z-50 bg-light-100">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* Logo */}
-        <a href="/" className="flex-shrink-0" aria-label="Nike Home">
+        <Link href="/" className="flex-shrink-0" aria-label="Nike Home">
           <Image
             src="/logo.svg"
             alt="Nike"
@@ -32,7 +40,7 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
             className="h-5 w-auto md:h-6"
             priority
           />
-        </a>
+        </Link>
 
         {/* Desktop Navigation Links */}
         <ul className="hidden items-center gap-8 md:flex">
@@ -58,6 +66,18 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
           >
             Search
           </button>
+
+          {/* User Profile or Login */}
+          {user ? (
+            <ProfileDropdown user={user} />
+          ) : (
+            <Link
+              href="/login"
+              className="text-body font-body text-dark-900 transition-colors hover:text-dark-700"
+            >
+              Login
+            </Link>
+          )}
 
           {/* Cart */}
           <CartIconButton />
@@ -116,6 +136,35 @@ export default function Navbar({ cartCount = 0 }: NavbarProps) {
               Search
             </button>
           </li>
+          {user ? (
+            <>
+              <li className="mt-2 border-t border-light-300 pt-4">
+                <Link
+                  href="/profile"
+                  className="block w-full py-3 text-left text-body font-body text-dark-900 transition-colors hover:text-dark-700"
+                >
+                  My Profile
+                </Link>
+              </li>
+              <li className="mt-2">
+                <Link
+                  href="/profile?tab=favorites"
+                  className="block w-full py-3 text-left text-body font-body text-dark-900 transition-colors hover:text-dark-700"
+                >
+                  Wishlist
+                </Link>
+              </li>
+            </>
+          ) : (
+            <li className="mt-2 border-t border-light-300 pt-4">
+              <Link
+                href="/login"
+                className="block w-full py-3 text-left text-body font-body text-dark-900 transition-colors hover:text-dark-700"
+              >
+                Login
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
     </header>

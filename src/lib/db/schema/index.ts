@@ -78,12 +78,11 @@ export {
 
 export {
   products,
-  productsRelations,
-  insertProductSchema,
-  selectProductSchema,
   type Product,
   type NewProduct,
 } from "./products";
+
+export { productsRelations } from "./product-relations";
 
 export {
   productVariants,

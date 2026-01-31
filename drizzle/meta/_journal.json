@@ -15,6 +15,13 @@
       "when": 1769675502721,
       "tag": "0001_magenta_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769810702309,
+      "tag": "0002_tricky_moondragon",
+      "breakpoints": true
     }
   ]
 }

@@ -53,7 +53,7 @@ export default async function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-light-100">
       {/* Navbar */}
-      <Navbar cartCount={2} />
+      {/* Navbar moved to layout */}
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-light-200 py-20">
@@ -105,6 +105,8 @@ export default async function Home() {
                 imageUrl={product.imageUrl}
                 colorCount={product.colorCount}
                 badge={index === 0 ? "Best Seller" : undefined}
+                productId={product.id}
+                userId={session?.user?.id}
               />
             ))}
           </div>
@@ -112,7 +114,7 @@ export default async function Home() {
       </main>
 
       {/* Footer */}
-      <Footer />
+      {/* Footer moved to layout */}
     </div>
   );
 }

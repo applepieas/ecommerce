@@ -25,21 +25,7 @@ export const products = pgTable("products", {
 });
 
 // Relations
-export const productsRelations = relations(products, ({ one, many }) => ({
-  category: one(categories, {
-    fields: [products.categoryId],
-    references: [categories.id],
-  }),
-  gender: one(genders, {
-    fields: [products.genderId],
-    references: [genders.id],
-  }),
-  brand: one(brands, {
-    fields: [products.brandId],
-    references: [brands.id],
-  }),
-  // Note: variants and images relations are defined in their respective schema files
-}));
+// relations moved to product-relations.ts to avoid circular dependencies
 
 // Zod schemas
 export const insertProductSchema = createInsertSchema(products);

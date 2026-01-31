@@ -135,9 +135,10 @@ function EmptyState() {
 
 interface ProductsGridProps {
   products: Awaited<ReturnType<typeof getAllProducts>>["products"];
+  userId?: string;
 }
 
-function ProductsGrid({ products }: ProductsGridProps) {
+function ProductsGrid({ products, userId }: ProductsGridProps) {
   if (products.length === 0) {
     return <EmptyState />;
   }
@@ -152,7 +153,9 @@ function ProductsGrid({ products }: ProductsGridProps) {
             price={product.price}
             imageUrl={product.imageUrl}
             colorCount={product.colorCount}
-            badge={index === 0 ? "Best Seller" : undefined}
+            badge={product.salePrice ? "Sale" : undefined}
+            productId={product.id}
+            userId={userId}
           />
         </Link>
       ))}
@@ -168,9 +171,20 @@ interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+
+// ... existing imports
+
+// ...
+
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   // Await searchParams (Next.js 15 requirement)
   const params = await searchParams;
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
   // Parse filters from searchParams using the new helper
   const filters = parseFilterParams(params);
@@ -183,7 +197,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <div className="flex min-h-screen flex-col bg-light-100">
-      <Navbar cartCount={0} />
+      {/* Navbar moved to layout */}
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
         {/* Page Header */}
@@ -239,12 +253,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
           {/* Products Grid */}
           <div className="flex-1">
-            <ProductsGrid products={products} />
+            <ProductsGrid products={products} userId={session?.user?.id} />
           </div>
         </div>
       </main>
 
-      <Footer />
+      {/* Footer moved to layout */}
     </div>
   );
 }

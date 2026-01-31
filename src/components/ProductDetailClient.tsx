@@ -6,6 +6,7 @@ import ProductGallery from "./ProductGallery";
 import ColorPicker from "./ColorPicker";
 import SizePicker from "./SizePicker";
 import { AccordionItem, StarRating } from "./Accordion";
+import WishlistButton from "./wishlist/WishlistButton";
 
 // ============================================
 // Types (matching getProduct return type)
@@ -39,6 +40,7 @@ interface ProductDetailClientProps {
     gender: { id: string; slug: string; label: string } | null;
     variants: Variant[];
     images: ProductImage[];
+    userId?: string;
   };
 }
 
@@ -268,17 +270,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         </button>
 
         {/* Favorite Button */}
-        <button className="flex h-14 w-full items-center justify-center gap-2 rounded-full border border-light-400 text-body font-body-medium text-dark-900 transition-all hover:border-dark-900">
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            />
-          </svg>
-          Favourite
-        </button>
+        <WishlistButton
+          productId={product.id}
+          variantId={selectedVariant?.id}
+          userId={product.userId}
+          showLabel
+          className="h-14 w-full rounded-full border border-light-400 bg-transparent py-0 text-body font-body-medium hover:border-dark-900 hover:bg-transparent"
+        />
 
         {/* Accordion Sections */}
         <div className="mt-4">

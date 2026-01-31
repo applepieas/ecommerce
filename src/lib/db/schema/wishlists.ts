@@ -1,8 +1,9 @@
-import { pgTable, uuid, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, timestamp, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { user } from "./user";
 import { products } from "./products";
+import { productVariants } from "./variants";
 
 export const wishlists = pgTable("wishlists", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -12,8 +13,11 @@ export const wishlists = pgTable("wishlists", {
   productId: uuid("product_id")
     .notNull()
     .references(() => products.id, { onDelete: "cascade" }),
+  variantId: uuid("variant_id"),
   addedAt: timestamp("added_at").notNull().defaultNow(),
-});
+}, (t) => ({
+  unq: unique().on(t.userId, t.productId, t.variantId),
+}));
 
 // Relations
 export const wishlistsRelations = relations(wishlists, ({ one }) => ({
@@ -24,6 +28,10 @@ export const wishlistsRelations = relations(wishlists, ({ one }) => ({
   product: one(products, {
     fields: [wishlists.productId],
     references: [products.id],
+  }),
+  variant: one(productVariants, {
+    fields: [wishlists.variantId],
+    references: [productVariants.id],
   }),
 }));
 

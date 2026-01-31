@@ -6,9 +6,10 @@ import { useState } from "react";
 interface AuthFormProps {
   mode: "sign-in" | "sign-up";
   onSubmit?: (data: FormData) => Promise<{ success?: boolean; error?: string }>;
+  redirectTo?: string;
 }
 
-export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
+export default function AuthForm({ mode, onSubmit, redirectTo }: AuthFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +30,7 @@ export default function AuthForm({ mode, onSubmit }: AuthFormProps) {
           setError(result.error);
         } else if (result.success) {
           router.refresh();
-          router.push("/");
+          router.push(redirectTo || "/");
         }
       } catch {
         setError("An unexpected error occurred");

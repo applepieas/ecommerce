@@ -156,13 +156,16 @@ async function ReviewsSection({ productId }: { productId: string }) {
 // You Might Also Like Component
 // ============================================
 
+// ...
+
 interface YouMightAlsoLikeProps {
   productId: string;
   categoryId: string | null;
   genderId: string | null;
+  userId?: string;
 }
 
-async function YouMightAlsoLike({ productId, categoryId, genderId }: YouMightAlsoLikeProps) {
+async function YouMightAlsoLike({ productId, categoryId, genderId, userId }: YouMightAlsoLikeProps) {
   const relatedProducts = await getRelatedProducts(productId, categoryId, genderId, 4);
 
   if (relatedProducts.length === 0) {
@@ -189,6 +192,8 @@ async function YouMightAlsoLike({ productId, categoryId, genderId }: YouMightAls
                 imageUrl={product.imageUrl}
                 colorCount={product.colorCount}
                 badge={index === 0 ? "Best Seller" : (discount > 0 ? `Extra ${discount}% off` : undefined)}
+                productId={product.id}
+                userId={userId}
               />
             </Link>
           );
@@ -198,12 +203,17 @@ async function YouMightAlsoLike({ productId, categoryId, genderId }: YouMightAls
   );
 }
 
-// ============================================
-// Main Page Component
-// ============================================
+// ...
+
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
   // We need to handle potential invalid UUIDs gracefully
   // getProduct checks DB but if ID is not UUID format it might throw at DB level
@@ -211,9 +221,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getProduct(id);
 
   if (!product) {
+    // ...
     return (
       <div className="flex min-h-screen flex-col bg-light-100">
-        <Navbar cartCount={0} />
+        {/* Navbar moved to layout */}
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
           <ProductNotFound />
         </main>
@@ -224,7 +235,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-light-100">
-      <Navbar cartCount={0} />
+      {/* Navbar moved to layout */}
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
         {/* Breadcrumbs */}
@@ -232,7 +243,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         {/* Product Content */}
         <Suspense fallback={<ProductSkeleton />}>
-          <ProductDetailClient product={product} />
+          <ProductDetailClient product={{ ...product, userId: session?.user?.id }} />
         </Suspense>
 
         {/* Reviews */}
@@ -269,11 +280,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
             productId={product.id}
             categoryId={product.category?.id ?? null}
             genderId={product.gender?.id ?? null}
+            userId={session?.user?.id}
           />
         </Suspense>
       </main>
 
-      <Footer />
+      {/* Footer moved to layout */}
     </div>
   );
 }

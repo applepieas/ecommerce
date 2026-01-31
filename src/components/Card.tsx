@@ -1,4 +1,5 @@
 import Image from "next/image";
+import AddToWishlistButton from "./wishlist/AddToWishlistButton";
 
 interface CardProps {
   title: string;
@@ -7,6 +8,10 @@ interface CardProps {
   imageUrl: string;
   colorCount?: number;
   badge?: string;
+  productId: string;
+  variantId?: string;
+  userId?: string;
+  initialIsLiked?: boolean;
 }
 
 export default function Card({
@@ -16,9 +21,22 @@ export default function Card({
   imageUrl,
   colorCount,
   badge,
+  productId,
+  variantId,
+  userId,
+  initialIsLiked,
 }: CardProps) {
   return (
-    <article className="group flex flex-col h-full overflow-hidden rounded-lg bg-light-100 border border-light-300">
+    <article className="group flex flex-col h-full overflow-hidden rounded-lg bg-light-100 border border-light-300 relative">
+      {/* Wishlist Button */}
+      <div className="absolute top-4 right-4 z-20">
+        <AddToWishlistButton
+          productId={productId}
+          variantId={variantId}
+          userId={userId}
+          initialIsLiked={initialIsLiked}
+        />
+      </div>
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-light-200">
         {/* Badge */}
