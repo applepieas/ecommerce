@@ -7,7 +7,7 @@ interface FavoritesTabProps {
   userId: string;
 }
 
-export default function FavoritesTab({ wishlist, userId }: FavoritesTabProps) {
+export function FavoritesTab({ wishlist, userId }: FavoritesTabProps) {
   if (wishlist.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">

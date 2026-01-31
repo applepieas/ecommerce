@@ -13,25 +13,7 @@ import { headers } from "next/headers";
 // Types & Schemas
 // ============================================
 
-const deliveryAddressSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  line1: z.string().min(1, "Address line 1 is required"),
-  line2: z.string().optional(),
-  city: z.string().min(1, "City is required"),
-  postalCode: z.string().min(1, "Postal code is required"),
-  country: z.string().min(1, "Country is required"),
-  phone: z.string().min(1, "Phone number is required"),
-});
-
-export const createOrderSchema = z.object({
-  deliveryAddress: deliveryAddressSchema,
-  deliveryMethod: z.enum(["standard", "express"]),
-  paymentMethod: z.string().min(1, "Payment method is required"),
-  guestEmail: z.string().email().optional(),
-  createAccount: z.boolean().optional(),
-});
-
-export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+import { createOrderSchema, CreateOrderInput } from "@/lib/validations/order";
 
 // Delivery costs (hardcoded for now)
 const DELIVERY_COSTS = {
@@ -152,5 +134,36 @@ export async function getOrder(orderId: string) {
   } catch (error) {
     console.error("Get Order Error:", error);
     return null;
+  }
+}
+
+export async function getUserOrders(userId: string) {
+  try {
+    const userOrders = await (db as any).query.orders.findMany({
+      where: eq(orders.userId, userId),
+      with: {
+        items: {
+          with: {
+            productVariant: {
+              with: {
+                product: {
+                  with: {
+                    images: true
+                  }
+                },
+                color: true,
+                size: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: (orders: any, { desc }: any) => [desc(orders.createdAt)],
+    });
+
+    return userOrders;
+  } catch (error) {
+    console.error("Get User Orders Error:", error);
+    return [];
   }
 }

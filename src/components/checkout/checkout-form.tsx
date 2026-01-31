@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createOrder, CreateOrderInput, createOrderSchema } from "@/lib/actions/order";
+import { createOrder } from "@/lib/actions/order";
+import { CreateOrderInput, createOrderSchema } from "@/lib/validations/order";
 import { Truck, CreditCard, UserPlus, CheckCircle } from "lucide-react";
 
 interface CheckoutFormProps {

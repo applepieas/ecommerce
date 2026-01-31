@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import FavoritesTab from "./FavoritesTab";
+import { FavoritesTab } from "./FavoritesTab";
 import { Wishlist } from "@/lib/db/schema/wishlists";
+
+import Link from "next/link"; // Ensure Link is imported if used (not used here but OrdersTab uses it)
+import OrdersTab from "./OrdersTab";
 
 interface ProfileTabsProps {
   user: {
@@ -12,10 +15,11 @@ interface ProfileTabsProps {
     name: string;
     email: string;
   };
-  initialWishlist: any[]; // Using any for now to avoid deep type issues, should be WishlistItemDTO
+  initialWishlist: any[];
+  initialOrders: any[];
 }
 
-export default function ProfileTabs({ user, initialWishlist }: ProfileTabsProps) {
+export default function ProfileTabs({ user, initialWishlist, initialOrders }: ProfileTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -67,9 +71,7 @@ export default function ProfileTabs({ user, initialWishlist }: ProfileTabsProps)
       {/* Tab Content */}
       <div className="py-8">
         {activeTab === "orders" && (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">Your orders will appear here once you complete a purchase.</p>
-          </div>
+          <OrdersTab orders={initialOrders} />
         )}
 
         {activeTab === "favorites" && (
