@@ -616,6 +616,7 @@ export async function getRelatedProducts(
   }
 }
 
+
 /**
  * Get product reviews
  */
@@ -705,3 +706,133 @@ export async function getProductReviews(productId: string): Promise<ProductRevie
     return [];
   }
 }
+
+/**
+ * Get products for a specific collection
+ */
+export async function getCollectionProducts(
+  collectionSlug: string,
+  limit: number = 4
+): Promise<ProductCardData[]> {
+  try {
+    const { productCollections, collections } = await import("@/lib/db/schema");
+
+    const collectionQuery = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        categoryName: categories.name,
+        brandName: brands.name,
+        minEffectivePrice: sql<string>`MIN(CAST(COALESCE(${productVariants.salePrice}, ${productVariants.price}) AS DECIMAL))`,
+        hasSalePrice: sql<boolean>`MAX(CASE WHEN ${productVariants.salePrice} IS NOT NULL THEN 1 ELSE 0 END) = 1`,
+        minSalePrice: sql<string>`MIN(CAST(${productVariants.salePrice} AS DECIMAL))`,
+        colorCount: sql<number>`COUNT(DISTINCT ${productVariants.colorId})`,
+      })
+      .from(products)
+      .innerJoin(productCollections, eq(products.id, productCollections.productId))
+      .innerJoin(collections, eq(productCollections.collectionId, collections.id))
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .leftJoin(brands, eq(products.brandId, brands.id))
+      .leftJoin(productVariants, eq(products.id, productVariants.productId))
+      .where(
+        and(
+          eq(products.isPublished, true),
+          eq(collections.slug, collectionSlug)
+        )
+      )
+      .groupBy(products.id, products.name, categories.name, brands.name)
+      .limit(limit);
+
+    const collectionWithImages: ProductCardData[] = await Promise.all(
+      collectionQuery.map(async (product) => {
+        const image = await db
+          .select({ url: productImages.url })
+          .from(productImages)
+          .where(eq(productImages.productId, product.id))
+          .orderBy(desc(productImages.isPrimary), asc(productImages.sortOrder))
+          .limit(1);
+
+        return {
+          id: product.id,
+          name: product.name,
+          categoryName: product.categoryName || "Shoes",
+          brandName: product.brandName,
+          price: parseFloat(product.minEffectivePrice),
+          salePrice: product.hasSalePrice && product.minSalePrice
+            ? parseFloat(product.minSalePrice)
+            : null,
+          imageUrl: image[0]?.url || "/shoes/shoe-1.jpg",
+          colorCount: product.colorCount || 1,
+        };
+      })
+    );
+
+    return collectionWithImages;
+  } catch (error) {
+    console.error(`Failed to fetch collection products for ${collectionSlug}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Get featured products
+ */
+export async function getFeaturedProducts(limit: number = 6): Promise<ProductCardData[]> {
+  try {
+    const featuredQuery = await db
+      .select({
+        id: products.id,
+        name: products.name,
+        categoryName: categories.name,
+        brandName: brands.name,
+        minEffectivePrice: sql<string>`MIN(CAST(COALESCE(${productVariants.salePrice}, ${productVariants.price}) AS DECIMAL))`,
+        hasSalePrice: sql<boolean>`MAX(CASE WHEN ${productVariants.salePrice} IS NOT NULL THEN 1 ELSE 0 END) = 1`,
+        minSalePrice: sql<string>`MIN(CAST(${productVariants.salePrice} AS DECIMAL))`,
+        colorCount: sql<number>`COUNT(DISTINCT ${productVariants.colorId})`,
+      })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .leftJoin(brands, eq(products.brandId, brands.id))
+      .leftJoin(productVariants, eq(products.id, productVariants.productId))
+      .where(eq(products.isPublished, true))
+      .groupBy(products.id, products.name, categories.name, brands.name)
+      .orderBy(desc(products.createdAt))
+      .limit(limit);
+
+    const featuredWithImages: ProductCardData[] = await Promise.all(
+      featuredQuery.map(async (product, index) => {
+        const image = await db
+          .select({ url: productImages.url })
+          .from(productImages)
+          .where(eq(productImages.productId, product.id))
+          .orderBy(desc(productImages.isPrimary), asc(productImages.sortOrder))
+          .limit(1);
+
+        let badge: string | undefined;
+        if (index === 0) badge = "Best Seller";
+        else if (index === 1) badge = "Extra 20% off";
+        else if (index === 2) badge = "Extra 10% off";
+
+        return {
+          id: product.id,
+          name: product.name,
+          categoryName: product.categoryName || "Shoes",
+          brandName: product.brandName,
+          price: parseFloat(product.minEffectivePrice),
+          salePrice: product.hasSalePrice && product.minSalePrice
+            ? parseFloat(product.minSalePrice)
+            : null,
+          imageUrl: image[0]?.url || "/shoes/shoe-1.jpg",
+          colorCount: product.colorCount || 1,
+          badge,
+        };
+      })
+    );
+
+    return featuredWithImages;
+  } catch (error) {
+    console.error(`Failed to fetch featured products:`, error);
+    return [];
+  }
+}
+
