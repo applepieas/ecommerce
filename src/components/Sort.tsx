@@ -75,7 +75,7 @@ export default function Sort() {
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
-        <span>Sort By</span>
+        <span className="whitespace-nowrap">Sort By</span>
         <span className="text-body-medium font-body-medium bg-light-200 px-2 py-1 border border-light-300 rounded text-dark-700">{currentLabel}</span>
         <svg
           className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""

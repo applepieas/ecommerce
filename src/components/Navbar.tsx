@@ -28,10 +28,10 @@ export default function Navbar({ cartCount = 0, user }: NavbarProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-light-100">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+    <header className="sticky top-0 z-50 bg-light-100 mt-4 lg:mt-8">
+      <nav className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:justify-center">
         {/* Logo */}
-        <Link href="/" className="flex-shrink-0" aria-label="Nike Home">
+        <Link href="/" className="flex-shrink-0 md:absolute md:left-6" aria-label="Nike Home">
           <Image
             src="/logo.svg"
             alt="Nike"
@@ -57,7 +57,7 @@ export default function Navbar({ cartCount = 0, user }: NavbarProps) {
         </ul>
 
         {/* Desktop Actions */}
-        <div className="hidden items-center gap-6 md:flex">
+        <div className="absolute right-6 hidden items-center gap-6 md:flex">
           {/* Search Button */}
           <button
             type="button"
