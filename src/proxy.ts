@@ -7,7 +7,7 @@ const protectedRoutes = ["/checkout"];
 // Routes that should redirect authenticated users
 const authRoutes = ["/sign-in", "/sign-up"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check for auth session cookie (Better Auth uses this pattern)

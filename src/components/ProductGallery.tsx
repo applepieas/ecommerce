@@ -86,6 +86,8 @@ export default function ProductGallery({
           className="object-cover transition-opacity duration-300"
           sizes="(max-width: 768px) 100vw, 50vw"
           priority
+          loading="eager"
+          fetchPriority="high"
         />
       </div>
 
